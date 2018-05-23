@@ -2,7 +2,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-exports.LeaderBoard = mongoose.model('LeaderBoard',new Schema({
+exports.LeaderBoard = mongoose.model('LeaderBoard', new Schema({
     name: {
         type: String,
         required: 'El nombre de la quiniela siempre es unico',
@@ -11,14 +11,14 @@ exports.LeaderBoard = mongoose.model('LeaderBoard',new Schema({
     },
     type: String,
     bgColor: String,
-    listaUsuarios: [Schema.Types.Mixed],
-    password: String
+    password: String,
+    listaUsers: [Schema.Types.Mixed] 
 }));
 
 exports.LeaderBoardPlayer = function(input){
     this.username = input.username;
-    if(input.isAdmin != null) this.isAdmin = input.isAdmin;
-    if(input.isActive != null)this.isActive = input.isActive;
-    if(input.points != null)this.points = input.points;
-    if(input.winnerTeam != null)this.winnerTeam = input.winnerTeam;
+    this.isAdmin  = input.isAdmin  || undefined;
+    this.isActive  = input.isActive  || undefined;
+    this.points  = input.points  || undefined;
+    this.winnerTeam = input.winnerTeam || undefined;
 };

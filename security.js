@@ -32,4 +32,13 @@ function comparePasswords(userpassword, inputpassword) {
     return sha1(inputpassword) === userpassword
 }
 
-module.exports = passport;
+module.exports.validateUser = function(req, res, next) {
+    if (req.user === undefined) {
+        res.status(401);
+        res.end("Bad user");
+    } else {
+        next();
+    }
+}
+
+module.exports.passport = passport;

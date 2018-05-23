@@ -9,7 +9,7 @@ var groupModule = require('./groups');
 var teamModule = require('./teams');
 var leadModule = require('./leaderboard');
 
-var secitury = require('./security');
+var secitury = require('./security').passport;
 var dbconn = require('./dbconn');
 var fixtures = require('./fixtures');
 
@@ -29,7 +29,7 @@ app.use(require('express-session')({
   secret: 'keyboard cat',
   resave: true,
   saveUninitialized: true,
-  cookie:{_expires : 60000}
+  cookie:{_expires : 600000}
 }));
 
 app.use(secitury.initialize());

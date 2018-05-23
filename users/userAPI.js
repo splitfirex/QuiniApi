@@ -1,15 +1,7 @@
 var express = require('express');
 var router = express.Router();
-var passport = require('passport');
-
-function validateUser(req, res, next) {
-    if (req.user === undefined) {
-        res.status(401);
-        res.end("Bad user");
-    } else {
-        next();
-    }
-}
+var passport = require('../security').passport;
+var validateUser = require('../security').validateUser;
 
 router.post("/login", function (req, res, next) {
     passport.authenticate("local", function (error, user, info) {

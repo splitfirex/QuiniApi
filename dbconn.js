@@ -1,2 +1,2 @@
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://MG_ADMIN:MG_ADMIN@cluster0-shard-00-00-955b2.mongodb.net:27017,cluster0-shard-00-01-955b2.mongodb.net:27017,cluster0-shard-00-02-955b2.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin', { autoIndex: false });
+mongoose.connect('mongodb://localhost/test', { autoIndex: false });

@@ -8,14 +8,27 @@ teamModule.team.collection.drop();
 userModule.user.collection.drop();
 leadModule.leaderboard.collection.drop();
 //userModule.user.collection.drop();
-new userModule.user({ username: "Daniel", password: "123456" }).save();
-new leadModule.leaderboard({
-    name: "Daniel", password: "123456", listaUsuarios: [
-        new leadModule.leaderboardPlayer({ username: "Daniel", isAdmin: true, isActive: true, winnerTeam: null, points: 0 })
-    ]
-}).save();
+var u = new userModule.user({ username: "Daniel", password: "123456" }).save();
+var l = new leadModule.leaderboard({ name: "Daniel", password: "123456" }).save();
+var l2 = new leadModule.leaderboard({ name: "Daniel2" }).save();
 
-request('https://raw.githubusercontent.com/lsv/fifa-worldcup-2018/master/data.json', function (error, response, body) {
+Promise.all([l,l2]).then(function ([ladderResult,ladderResult2]) {
+    leadModule.service.joinLeader(ladderResult.name,"Daniel").then();
+    leadModule.service.joinLeader(ladderResult2.name,"Daniel").then();
+});
+/*Promise.all([u, l]).then(function ([userResult, ladderResult]) {
+    leadModule.leaderboard.findOneAndUpdate(ladderResult._id, {
+        $push:
+            { listaUsers: new leadModule.leaderboardPlayer({ username: userResult.username, isAdmin: true, isActive: true }) }
+    }).exec()
+        .then();
+    return;
+});
+*/
+
+new teamModule.team({ id: 1, name: "team1" }).save();
+
+/*request('https://raw.githubusercontent.com/lsv/fifa-worldcup-2018/master/data.json', function (error, response, body) {
     var Teams = JSON.parse(body).teams;
     var Groups = JSON.parse(body).groups;
     var knockouts = JSON.parse(body).knockout;
@@ -31,5 +44,5 @@ request('https://raw.githubusercontent.com/lsv/fifa-worldcup-2018/master/data.js
         new groupModule.group({ ...knockouts[item], shortName: knockouts[item].name, type: "knockouts", order: counter }).save();
         counter = counter + 1;
     }
-});
+});*/
 

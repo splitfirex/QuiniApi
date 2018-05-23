@@ -3,9 +3,9 @@ var sha1 = require('sha1');
 var Schema = mongoose.Schema;
 
 var UserSchema = new Schema({
-    username: { type: String, unique: true, required : true, indexed: true },
+    username: { type: String, unique: true, required : [true, 'Usuario requerido'], indexed: true },
     password: {
-        required : true,
+        required : "Contraseña requerida",
         type: String,
         set: function(value){
             return sha1(value);

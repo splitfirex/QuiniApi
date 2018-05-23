@@ -1,5 +1,7 @@
 const local = require("./");
 
-exports.functionService = function(username){
-    return new local.group("23");
+exports.createGroup = function (groupData) {
+    local.group.find({ idLeaderboard: groupData.idLeaderboard, idUser: groupData.idUser, order: groupData.order }, function (data) {
+        if (!data) new local.group(groupData).save();
+    }).catch((err) => console.log(err));
 };

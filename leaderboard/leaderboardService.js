@@ -17,3 +17,9 @@ exports.joinLeader = function (leadername, username) {
         $push: { listaUsers: new local.leaderboardPlayer({ username: username, isAdmin: false, isActive: false }) }
     }).exec();
 }
+
+exports.createLeader = function (leaderData) {
+    local.leaderboard.find({ name: leaderData.name }, function(data){
+        if(!data) new local.leaderboard(leaderData).save();
+    }).catch((err)=> console.log(err));
+}

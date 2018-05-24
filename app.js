@@ -4,10 +4,10 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-var userModule = require('./users');
-var groupModule = require('./groups');
-var teamModule = require('./teams');
-var leadModule = require('./leaderboard');
+var userModule = require('users');
+var groupModule = require('groups');
+var teamModule = require('teams');
+var leadModule = require('leaderboard');
 
 var secitury = require('./security').passport;
 var dbconn = require('./dbconn');

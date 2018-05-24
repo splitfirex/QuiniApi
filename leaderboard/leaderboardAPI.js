@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var local = require('./');
+var groupsModel = require('groups');
 var validateUser = require('../security').validateUser;
 
 router.get('/', function (req, res, next) {
@@ -24,7 +25,7 @@ router.post('/', validateUser, function (req, res, next) {
   local.service.getAllLeaders()
     .then((leaders) => {
       return res.status(200).json(leaders.map(function (x) {
-        if (x.listaUsers.map(function (x1) { return x1.username }).indexOf(req.user.username) != -1) {
+        if (Object.keys(x.listaUsers).indexOf(req.user.username) != -1) {
           return { ...x.toJSON(), playerCount: x.listaUsers.length, isPassword: !x.password, password: null };
         }
         return { _id: x._id, name: x.name, isPassword: !x.password, playerCount: x.listaUsers.length }
@@ -45,8 +46,11 @@ router.post('/detail', validateUser, function (req, res, next) {
 
 router.post('/join', validateUser, function (req, res, next) {
   local.service.joinLeader(req.body.leadername, req.body.password, req.user.username)
-    .then((leader) => !leader ? res.status(400).json({}) :
-      res.status(200).json(leader))
+    .then((leader) => {
+      if (!leader) return res.status(400).json({});
+      groupsModel.service.createDefaulsGroupsPlayer(leader._id, req.user.username);
+      res.status(200).json(leader)
+    })
     .catch(err =>
       res.status(400).send(err));
 });
@@ -57,8 +61,11 @@ router.post('/create', validateUser, function (req, res, next) {
     name: req.body.leadername, type: req.body.type, password: req.body.password,
     listaUsers: [{ username: req.user.username, isAdmin: true, isActive: true }]
   })
-    .then((leader) => !leader ? res.status(400).json({}) :
-      res.status(200).json(leader))
+    .then((leader) => {
+      if (!leader) return res.status(400).json({});
+      groupsModel.service.createDefaulsGroupsPlayer(leader._id, req.user.username);
+      res.status(200).json(leader)
+    })
     .catch(err =>
       res.status(400).send(err));
 });
@@ -66,13 +73,13 @@ router.post('/create', validateUser, function (req, res, next) {
 router.post('/updatestatus', validateUser, function (req, res, next) {
   local.service.updatePlayerStatus(req.user.username, req.body.leadername, { username: req.body.username, isAdmin: (req.body.isAdmin + '').toLowerCase() === 'true', isActive: (req.body.isActive + '').toLowerCase() === 'true' })
     .then((leader) => !leader ? res.status(400).json({}) :
-      res.status(200).json(leader.listaUsers.filter(function(x){ return x.username === req.body.username })))
+      res.status(200).json(leader.listaUsers.filter(function (x) { return x.username === req.body.username })))
     .catch(err =>
       res.status(400).send(err));
 });
 
 function hideLadderInfoMap(x) {
-  return { _id: x._id, name: x.name, isPassword: !x.password, playerCount: x.listaUsers.length }
+  return { _id: x._id, name: x.name, isPassword: x.password != undefined, playerCount: Object.keys(x.listaUsers).length }
 }
 
 module.exports = router;

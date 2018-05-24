@@ -20,7 +20,7 @@ exports.LeaderBoard = mongoose.model('LeaderBoard', new Schema({
             return sha1(value);
         }
     }, 
-    listaUsers: [Schema.Types.Mixed]
+    listaUsers: Schema.Types.Mixed
 }));
 
 exports.LeaderBoardPlayer = function (input) {

@@ -30,6 +30,7 @@ exports.createDefaulsGroupsPlayer  = function (leaderid, username) {
     return Promise.all([dgroups, user]).then(([dgroupsR, userR]) => {
         dgroupsR.forEach(element => {
             element._id = mongoose.Types.ObjectId();
+            element.isNew = true;
             element.idLeaderboard = leaderid;
             element.idUser = userR._id;
             element.save();

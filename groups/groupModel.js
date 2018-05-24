@@ -16,7 +16,7 @@ var GroupSchema = new Schema({
     idLeaderboard: String,
     winnerup: Number,
     runnerup: Number,
-    matches: [Schema.Types.Mixed],
+    matches: Schema.Types.Mixed,
     order: Number
 });
 

@@ -10,11 +10,9 @@ exports.findById = function (id) {
 };
 
 exports.registerUser = function (userData) {
-    return local.user.count({ username: userData.username }, function (err, val) {
-        console.log(val);
-        if (val === 0) {
-            return new local.user(userData).save();
-        }
-        return Promise.reject({ errors: { username: "Usuario ya existe" } });
-    }).exec();
+    return local.user.count({ username: userData.username })
+        .then((data) => {
+            if (data === 0) return new local.user(userData).save();
+            return Promise.reject({ errors: { username: "Usuario ya existe" } });
+        });
 }

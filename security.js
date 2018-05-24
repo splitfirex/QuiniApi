@@ -1,6 +1,6 @@
 var passport = require('passport')
     , LocalStrategy = require('passport-local').Strategy;
-var userModule = require("./users");
+var userModule = require("users");
 var sha1 = require('sha1');
 
 passport.serializeUser(function (user, done) {

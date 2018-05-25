@@ -10,12 +10,27 @@ teamModule.team.collection.drop();
 userModule.user.collection.drop();
 groupModule.group.collection.drop();
 
-userModule.service.registerUser({ username: "Daniel", password: "123456" }).catch((err) => console.log(err));
-userModule.service.registerUser({ username: "Daniel2", password: "123456" }).catch((err) => console.log(err));
-leadModule.service.createLeader({ name: "leader1", password: "123456", listaUsers: { Daniel: { username: "Daniel", isAdmin: true, isActive: true } } }).catch((err) => console.log(err));
+var user1 = userModule.service.registerUser({ username: "Daniel", password: "123456" });
+var user2 = userModule.service.registerUser({ username: "Daniel2", password: "123456" });
+
+Promise.all([user1, user2]).then(() => {
+    leadModule.service.createLeader({
+        name: "leader1", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16),
+        password: "123456", listaUsers: { Daniel: { username: "Daniel", isAdmin: true, isActive: true } }
+    }, "Daniel").then((leader) => {
+        leadModule.service.joinLeader(leader.name, "123456","Daniel2");
+    }).catch((err) => console.log(err));
+}).catch((err) => console.log(err));
+
+
+
 
 
 /*request('https://raw.githubusercontent.com/lsv/fifa-worldcup-2018/master/data.json', function (error, response, body) {
+     if (error) {
+        return console.log(error);
+    }
+    if (error) return console.log(error);
     var Teams = JSON.parse(body).teams;
     var Groups = JSON.parse(body).groups;
     var knockouts = JSON.parse(body).knockout;
@@ -24,11 +39,23 @@ leadModule.service.createLeader({ name: "leader1", password: "123456", listaUser
         teamModule.service.createTeam(Teams[item]);
     }
     for (item in Groups) {
-        groupModule.service.createGroup({ ...Groups[item], shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
+        var matches = {}
+        Groups[item].matches.forEach(element => {
+            matches[element.name + ""] = new groupModule.match(element);
+            matches[element.name + ""].groupName = Groups[item].name.replace("Group ", "");
+        });
+
+        groupModule.service.createGroup({ ...Groups[item], matches: matches, shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
         counter = counter + 1;
     }
     for (item in knockouts) {
-        groupModule.service.createGroup({ ...knockouts[item], shortName: knockouts[item].name, type: "knockouts", order: counter });
+        var matches = {}
+        knockouts[item].matches.forEach(element => {
+            matches[element.name + ""] = new groupModule.match(element);
+            matches[element.name + ""].groupName = knockouts[item].name
+        });
+
+        groupModule.service.createGroup({ ...knockouts[item], matches: matches, shortName: knockouts[item].name, type: "knockouts", order: counter });
         counter = counter + 1;
     }
 });
@@ -49,7 +76,8 @@ fs.readFile('data.json', 'utf8', function (err, body) {
     for (item in Groups) {
         var matches = {}
         Groups[item].matches.forEach(element => {
-            matches[element.name + ""] = element;
+            matches[element.name + ""] = new groupModule.match(element);
+            matches[element.name + ""].groupName = Groups[item].name.replace("Group ", "");
         });
 
         groupModule.service.createGroup({ ...Groups[item], matches: matches, shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
@@ -58,7 +86,8 @@ fs.readFile('data.json', 'utf8', function (err, body) {
     for (item in knockouts) {
         var matches = {}
         knockouts[item].matches.forEach(element => {
-            matches[element.name + ""] = element;
+            matches[element.name + ""] = new groupModule.match(element);
+            matches[element.name + ""].groupName = knockouts[item].name
         });
 
         groupModule.service.createGroup({ ...knockouts[item], matches: matches, shortName: knockouts[item].name, type: "knockouts", order: counter });

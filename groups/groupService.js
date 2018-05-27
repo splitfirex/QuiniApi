@@ -20,7 +20,7 @@ exports.getPublicMatches = function (leadername, username) {
 
 exports.getLoggedMatches = function (leadername, username, loggedusername) {
     var queryDot = "listaUsers." + loggedusername + ".isActive";
-    var leader = leadModule.leaderboard.findOne({ name: leadername, [queryDot]: true }).exec();
+    var leader = leadModule.leaderboard.findOne({ name: leadername, $or: [{ [queryDot]: true }, { password: { $exists: false } }] }).exec();
     var user = userModule.user.findOne({ username: username }).exec();
     return Promise.all([leader, user]).then(([leaderR, userR]) => {
         if (!leaderR || !userR) return Promise.reject({ errors: { name: "La quiniela no existe o no es publica y no perteneces a ella" } });
@@ -35,6 +35,8 @@ exports.updateMatch = function (leadername, username, matchData) {
     var dotUpdateAR = "matches." + matchData.match + ".away_result";
     var dotUpdateHP = "matches." + matchData.match + ".home_penalty";
     var dotUpdateAP = "matches." + matchData.match + ".away_penalty";
+    var dotUpdateHT = "matches." + matchData.match + ".home_team";
+    var dotUpdateAT = "matches." + matchData.match + ".away_team";
     var leader = leadModule.leaderboard.findOne({ name: leadername, [queryDot]: true }).exec();
     var user = userModule.user.findOne({ username: username }).exec();
     return Promise.all([leader, user]).then(([leaderR, userR]) => {
@@ -43,7 +45,8 @@ exports.updateMatch = function (leadername, username, matchData) {
         return local.group.findOneAndUpdate({ idLeaderboard: leaderR._id, idUser: userR._id, [queryDotMatch]: { $exists: true } }, {
             $set: {
                 [dotUpdateHR]: matchData.home_result, [dotUpdateAR]: matchData.away_result,
-                [dotUpdateHP]: matchData.home_penalty, [dotUpdateAP]: matchData.away_penalty
+                [dotUpdateHP]: matchData.home_penalty, [dotUpdateAP]: matchData.away_penalty,
+                [dotUpdateHT]: matchData.home_team, [dotUpdateAT]:  matchData.away_team
             }
         }, { new: true })
             .then((group) => {

@@ -17,7 +17,7 @@ exports.getPublicLeader = function (leadername) {
 
 exports.getLoggedLeader = function (leadername, username) {
     var dotQuery = "listaUsers." + username + ".isActive";
-    return local.leaderboard.findOne({ name: leadername, [dotQuery]: true }, { password: 0 })
+    return local.leaderboard.findOne({ name: leadername, $or: [{ [dotQuery]: true }, { password: { $exists: false } }] }, { password: 0 })
         .then((leader) => {
             if (!leader) return Promise.reject({ errors: { name: "La quiniela no existe o no tienes privilegios suficientes" } });
             return leader;
@@ -25,9 +25,11 @@ exports.getLoggedLeader = function (leadername, username) {
 };
 
 exports.updateColor = function (leadername, username) {
+    console.log(leadername);
+    console.log(username);
     var dotUpdate = "listaUsers." + username;
     return local.leaderboard.findOneAndUpdate({ name: leadername, [dotUpdate]: { $exists: true } }, {
-        $set: { gbcolor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16) }
+        $set: { bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16) }
     }, { new: true })
         .then((leader) => {
             if (!leader) return Promise.reject({ errors: { name: "La quiniela no existe o no tienes privilegios suficientes" } });

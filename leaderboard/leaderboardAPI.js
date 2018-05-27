@@ -4,16 +4,22 @@ var local = require('./');
 var validateUser = require('../security').validateUser;
 
 router.get('/', function (req, res, next) {
+  console.log(req.session.id);
+  console.log(req.session.cookie);
   local.service.getAllLeaders()
-    .then((leaders) =>
-      res.status(200).json(leaders.map(hideLadderInfoMap))
-    )
-    .catch(err =>
-      res.status(500).send(err));
+    .then((leaders) => {
+      return res.status(200).json(leaders.map(function (x) {
+        if (req.user && Object.keys(x.listaUsers).indexOf(req.user.username) != -1) {
+          return { ...x.toJSON(), playerCount: Object.keys(x.listaUsers).length, isPassword: x.password != undefined, password: null };
+        }
+        return hideLadderInfoMap(x)
+      }))
+    })
+    .catch(err => res.status(400).send(err));
 });
 
 router.get('/detail', function (req, res, next) {
-  local.service.getPublicLeader(req.query.leadername)
+  local.service.getLoggedLeader(req.query.leadername, !req.user ? null : req.user.username)
     .then((leader) => !leader ? res.status(404).json({}) :
       res.status(200).json(leader))
     .catch(err =>
@@ -30,20 +36,12 @@ router.post('/', validateUser, function (req, res, next) {
         }
         return hideLadderInfoMap(x)
       }))
-    }
-    )
-    .catch(err =>
-      res.status(400).send(err));
-});
-
-router.post('/detail', validateUser, function (req, res, next) {
-  local.service.getLoggedLeader(req.body.leadername, req.user.username)
-    .then((leader) => res.status(200).json(leader))
+    })
     .catch(err => res.status(400).send(err));
 });
 
-router.post('/updatecolor', validateUser, function (req, res, next) {
-  local.service.updateColor(req.body.leadername, req.user.username)
+router.post('/updatecolor', function (req, res, next) {
+  local.service.updateColor(req.query.leadername, req.user.username)
     .then((leader) => res.status(200).json(leader))
     .catch(err => res.status(400).send(err));
 });
@@ -71,7 +69,7 @@ router.post("/leave", validateUser, function (req, res, next) {
 });
 
 router.post("/kick", validateUser, function (req, res, next) {
-  local.service.kickplayer(req.body.leadername, req.body.username,req.user.username)
+  local.service.kickplayer(req.body.leadername, req.body.username, req.user.username)
     .then((leader) => { res.status(200).json(leader) })
     .catch(err => res.status(400).send(err));
 });
@@ -83,7 +81,7 @@ router.post('/updatestatus', validateUser, function (req, res, next) {
 });
 
 function hideLadderInfoMap(x) {
-  return { _id: x._id, type:x.type, name: x.name, isPassword: x.password != undefined, playerCount: Object.keys(x.listaUsers).length }
+  return { _id: x._id, bgColor: x.bgColor, type: x.type, name: x.name, isPassword: x.password != undefined, playerCount: Object.keys(x.listaUsers).length }
 }
 
 module.exports = router;

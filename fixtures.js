@@ -10,15 +10,23 @@ teamModule.team.collection.drop();
 userModule.user.collection.drop();
 groupModule.group.collection.drop();
 
-var user1 = userModule.service.registerUser({ username: "Daniel", password: "123456" });
+var user1 = userModule.service.registerUser({ username: "padmin", password: "123456" });
 var user2 = userModule.service.registerUser({ username: "Daniel2", password: "123456" });
+var user2 = userModule.service.registerUser({ username: "Daniel23", password: "123456" });
 
 Promise.all([user1, user2]).then(() => {
     leadModule.service.createLeader({
-        name: "leader1", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16),
-        password: "123456", listaUsers: { Daniel: { username: "Daniel", isAdmin: true, isActive: true } }
-    }, "Daniel").then((leader) => {
-        leadModule.service.joinLeader(leader.name, "123456","Daniel2");
+        name: "MAIN_LEADERBOARD", type: "P", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
+    }, "padmin").then((leader) => {
+        leadModule.service.joinLeader(leader.name, null, "Daniel2");
+    }).catch((err) => console.log(err));
+}).catch((err) => console.log(err));
+
+Promise.all([user2]).then(() => {
+    leadModule.service.createLeader({
+        name: "prueba", type: "P", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
+    }, "Daniel2").then((leader) => {
+        leadModule.service.joinLeader(leader.name, null, "Daniel23");
     }).catch((err) => console.log(err));
 }).catch((err) => console.log(err));
 
@@ -78,6 +86,8 @@ fs.readFile('data.json', 'utf8', function (err, body) {
         Groups[item].matches.forEach(element => {
             matches[element.name + ""] = new groupModule.match(element);
             matches[element.name + ""].groupName = Groups[item].name.replace("Group ", "");
+            matches[element.name + ""].editable = true;
+            matches[element.name + ""].forced = false;
         });
 
         groupModule.service.createGroup({ ...Groups[item], matches: matches, shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
@@ -88,6 +98,8 @@ fs.readFile('data.json', 'utf8', function (err, body) {
         knockouts[item].matches.forEach(element => {
             matches[element.name + ""] = new groupModule.match(element);
             matches[element.name + ""].groupName = knockouts[item].name
+            matches[element.name + ""].editable = true;
+            matches[element.name + ""].forced = false;
         });
 
         groupModule.service.createGroup({ ...knockouts[item], matches: matches, shortName: knockouts[item].name, type: "knockouts", order: counter });

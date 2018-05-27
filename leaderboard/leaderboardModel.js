@@ -11,15 +11,19 @@ exports.LeaderBoard = mongoose.model('LeaderBoard', new Schema({
         unique: true
     },
     type: String,
-    bgColor: String,
+    bgColor: {
+        type: String, set: function (value) {
+            return "#" + value;
+        }
+    },
     password: {
-        type: String, 
+        type: String,
         default: undefined,
         set: function (value) {
             if (value && value.length < 6) return value;
             return sha1(value);
         }
-    }, 
+    },
     listaUsers: Schema.Types.Mixed
 }));
 

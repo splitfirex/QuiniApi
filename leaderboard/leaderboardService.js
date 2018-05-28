@@ -15,8 +15,26 @@ exports.getPublicLeader = function (leadername) {
     return local.leaderboard.findOne({ name: leadername, password: { $exists: false } }, { password: 0 }, { sort: { name: -1 } }).exec();
 };
 
+exports.agregate = function () {
+    return groupsModel.group.aggregate([
+        {
+            $group: {
+                _id: {
+                    user: '$idUser',
+                    leader: '$idLeaderboard'
+                },
+                matches: { $addToSet: '$matches' }
+            }
+        }], function (err, res) {
+
+
+
+            console.log(res);
+        });
+}
+
 exports.getLoggedLeader = function (leadername, username) {
-    var dotQuery = "listaUsers." + username + ".isActive";
+    var dotQuery = "listaUsers." + username;
     return local.leaderboard.findOne({ name: leadername, $or: [{ [dotQuery]: true }, { password: { $exists: false } }] }, { password: 0 })
         .then((leader) => {
             if (!leader) return Promise.reject({ errors: { name: "La quiniela no existe o no tienes privilegios suficientes" } });

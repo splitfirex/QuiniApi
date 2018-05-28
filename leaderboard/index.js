@@ -7,3 +7,6 @@ module.exports.leaderboard = leaderboard;
 module.exports.leaderboardPlayer = leaderboardPlayer;
 module.exports.service = service;
 module.exports.api = api;
+
+module.exports.genericleader = process.env.leaderboard;
+module.exports.genericleaderpassword = process.env.leaderboardpassword;

@@ -53,6 +53,6 @@ exports.match = function (input) {
     this.home_penalty = input.home_penalty != 'null' && input.home_penalty;
     this.away_penalty = input.away_penalty != 'null' && input.away_penalty;
     this.date = new Date(input.date).getTime();
-    this.playerScore = -1;
+    this.playerPoint = -1;
     this.finished = input.finished;
 };

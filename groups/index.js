@@ -7,3 +7,4 @@ module.exports.group = group;
 module.exports.match = match;
 module.exports.service = service;
 module.exports.api = api;
+module.exports.defaultUser = "quiniAdmin";

@@ -10,23 +10,22 @@ teamModule.team.collection.drop();
 userModule.user.collection.drop();
 groupModule.group.collection.drop();
 
-var user1 = userModule.service.registerUser({ username: "padmin", password: "123456" });
-var user2 = userModule.service.registerUser({ username: "Daniel2", password: "123456" });
-var user2 = userModule.service.registerUser({ username: "Daniel23", password: "123456" });
+var user1 = userModule.service.registerUser({ username: userModule.genericuser, password: userModule.genericpassword });
+var user2 = userModule.service.registerUser({ username: "Jugador1", password: "jugador1" });
+var user3 = userModule.service.registerUser({ username: "Jugador2", password: "jugador2" });
 
-Promise.all([user1, user2]).then(() => {
+Promise.all([user1]).then(() => {
     leadModule.service.createLeader({
-        name: "MAIN_LEADERBOARD", type: "P", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
-    }, "padmin").then((leader) => {
-        leadModule.service.joinLeader(leader.name, null, "Daniel2");
-    }).catch((err) => console.log(err));
+        name: leadModule.genericleader, type: "P", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
+    }, userModule.genericuser)
+    .catch((err) => console.log(err));
 }).catch((err) => console.log(err));
 
 Promise.all([user2]).then(() => {
     leadModule.service.createLeader({
-        name: "prueba", type: "P", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
-    }, "Daniel2").then((leader) => {
-        leadModule.service.joinLeader(leader.name, null, "Daniel23");
+        name: "DEMO", type: "P", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
+    }, "Jugador1").then((leader) => {
+     //   leadModule.service.joinLeader(leader.name, null, "Jugador2");
     }).catch((err) => console.log(err));
 }).catch((err) => console.log(err));
 
@@ -88,6 +87,7 @@ fs.readFile('data.json', 'utf8', function (err, body) {
             matches[element.name + ""].groupName = Groups[item].name.replace("Group ", "");
             matches[element.name + ""].editable = true;
             matches[element.name + ""].forced = false;
+            matches[element.name + ""].playerPoint = null;
         });
 
         groupModule.service.createGroup({ ...Groups[item], matches: matches, shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
@@ -100,6 +100,7 @@ fs.readFile('data.json', 'utf8', function (err, body) {
             matches[element.name + ""].groupName = knockouts[item].name
             matches[element.name + ""].editable = true;
             matches[element.name + ""].forced = false;
+            matches[element.name + ""].playerPoint = null;
         });
 
         groupModule.service.createGroup({ ...knockouts[item], matches: matches, shortName: knockouts[item].name, type: "knockouts", order: counter });

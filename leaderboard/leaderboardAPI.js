@@ -4,8 +4,7 @@ var local = require('./');
 var validateUser = require('../security').validateUser;
 
 router.get('/', function (req, res, next) {
-  console.log(req.session.id);
-  console.log(req.session.cookie);
+
   local.service.getAllLeaders()
     .then((leaders) => {
       return res.status(200).json(leaders.map(function (x) {
@@ -26,11 +25,10 @@ router.get('/detail', function (req, res, next) {
       res.status(500).send(err));
 });
 
-router.post('/', validateUser, function (req, res, next) {
+router.post('/', function (req, res, next) {
   local.service.getAllLeaders()
     .then((leaders) => {
       return res.status(200).json(leaders.map(function (x) {
-        console.log(Object.keys(x.listaUsers));
         if (Object.keys(x.listaUsers).indexOf(req.user.username) != -1) {
           return { ...x.toJSON(), playerCount: Object.keys(x.listaUsers).length, isPassword: x.password != undefined, password: null };
         }
@@ -46,14 +44,14 @@ router.post('/updatecolor', function (req, res, next) {
     .catch(err => res.status(400).send(err));
 });
 
-router.post('/join', validateUser, function (req, res, next) {
+router.post('/join', function (req, res, next) {
   local.service.joinLeader(req.body.leadername, req.body.password, req.user.username)
     .then((leader) => res.status(200).json(leader))
     .catch(err => res.status(400).send(err));
 });
 
 
-router.post('/create', validateUser, function (req, res, next) {
+router.post('/create', function (req, res, next) {
   local.service.createLeader({
     name: req.body.leadername, type: req.body.type, password: req.body.password,
     bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
@@ -62,19 +60,19 @@ router.post('/create', validateUser, function (req, res, next) {
     .catch(err => res.status(400).send(err));
 });
 
-router.post("/leave", validateUser, function (req, res, next) {
+router.post("/leave", function (req, res, next) {
   local.service.leaveleader(req.body.leadername, req.user.username)
     .then((leader) => { res.status(200).json(leader) })
     .catch(err => res.status(400).send(err));
 });
 
-router.post("/kick", validateUser, function (req, res, next) {
+router.post("/kick", function (req, res, next) {
   local.service.kickplayer(req.body.leadername, req.body.username, req.user.username)
     .then((leader) => { res.status(200).json(leader) })
     .catch(err => res.status(400).send(err));
 });
 
-router.post('/updatestatus', validateUser, function (req, res, next) {
+router.post('/updatestatus', function (req, res, next) {
   local.service.updatePlayerStatus(req.user.username, req.body.leadername, { username: req.body.username, isAdmin: (req.body.isAdmin + '').toLowerCase() === 'true', isActive: (req.body.isActive + '').toLowerCase() === 'true' })
     .then((leader) => res.status(200).json(leader.listaUsers[req.body.username]))
     .catch(err => res.status(400).send(err));

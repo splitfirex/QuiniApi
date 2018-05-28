@@ -1,3 +1,4 @@
+require('dotenv').config();
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -12,7 +13,7 @@ var leadModule = require('leaderboard');
 
 var secitury = require('./security').passport;
 var dbconn = require('./dbconn');
-var fixtures = require('./fixtures');
+//var fixtures = require('./fixtures');
 
 var app = express();
 

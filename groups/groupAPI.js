@@ -55,7 +55,7 @@ router.post('/updatematch', function (req, res, next) {
 
 
 router.get('/prueba', function (req, res, next) {
-  leadModule.service.agregate().then((fff) => res.status(200).json(fff)).catch((err) => res.status(500).json(err));
+  local.service.updatePoints().then((fff) => res.status(200).json(fff)).catch((err) => res.status(500).json(err));
 });
 
 router.get('/prueba2', function (req, res, next) {

@@ -2,6 +2,7 @@ const local = require("./");
 const mongoose = require('mongoose');
 const leadModule = require("leaderboard");
 const userModule = require("users");
+var ObjectId = require('mongoose').Types.ObjectId; 
 
 exports.createGroup = function (groupData) {
     local.group.find({ idLeaderboard: groupData.idLeaderboard, idUser: groupData.idUser, order: groupData.order }, function (data) {
@@ -81,6 +82,8 @@ exports.updateMatchMain = function (leadername, username, matchData) {
     var dotUpdateAT = "matches." + matchData.match + ".away_team";
     var dotUpdateWI = "matches." + matchData.match + ".winner";
     var dotUpdatePP = "matches." + matchData.match + ".playerPoint";
+    var dotUpdateFN = "matches." + matchData.match + ".finished";
+    var dotUpdateEE = "matches." + matchData.match + ".editable";
 
     var leader = leadModule.leaderboard.findOne({ name: leadername, [queryDot]: true }).exec();
     var user = userModule.user.findOne({ username: username }).exec();
@@ -115,7 +118,11 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: null }, { multi: true }).exec();
+                    }, { [dotUpdatePP]: null, [dotUpdateFN]: false, [dotUpdateEE]:true }, { multi: true }).exec();
+
+                    Promise.all([query1]).then(() => {
+                        local.service.updatePoints();
+                    });
 
                 } else {
 
@@ -127,7 +134,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 1 }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 1, [dotUpdateFN]: true, [dotUpdateEE]:false }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(1 puntos)")
                     });
 
@@ -140,7 +147,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 3 }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 3, [dotUpdateFN]: true, [dotUpdateEE]:false }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(3 puntos)")
                     });
 
@@ -155,7 +162,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 6 }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 6, [dotUpdateFN]: true, [dotUpdateEE]:false }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(6 puntos)")
                     });
 
@@ -164,8 +171,12 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 0 }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 0, [dotUpdateFN]: true, [dotUpdateEE]:false  }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(0 puntos)")
+                    });
+
+                    Promise.all([query1, query2, query3, query4]).then(() => {
+                        local.service.updatePoints();
                     });
 
                 }
@@ -174,19 +185,65 @@ exports.updateMatchMain = function (leadername, username, matchData) {
     });
 };
 
+
+exports.updatePoints = function () {
+    return local.group.aggregate([
+        {
+            $group: {
+                _id: {
+                    user: '$idUser',
+                    leader: '$idLeaderboard'
+                },
+                mat: { $addToSet: { $objectToArray: "$matches" } }
+            },
+
+        }, {
+            $project: {
+                "premat": {
+                    $reduce: {
+                        input: "$mat",
+                        initialValue: [],
+                        in: { $concatArrays: ["$$value", "$$this"] }
+                    }
+                }
+            }
+        }, {
+            $project: {
+                "premat2": { $sum: "$premat.v.playerPoint" }
+            }
+        }
+
+    ], function (err, res) {
+        res.forEach((item) => {
+            userModule.user.findById(item._id.user)
+                .then((user) => {
+                    console.log(user);
+                    var querydot = "listaUsers." + user.username;
+                    var updateDot = "listaUsers." + user.username+".points";
+
+                    leadModule.leaderboard.findOneAndUpdate({ _id: new ObjectId(item._id.leader), [querydot]: { $exists: true } }, {
+                        $set: { [updateDot]: item.premat2 }
+                    }, { new: true }).then((lader)=> console.log(lader));
+
+                });
+        });
+        
+    });
+}
+
+
 exports.getDefaultGroups = function () {
     return local.group.find({ idLeaderboard: { $exists: false }, idUser: { $exists: false } }, null, { sort: { order: -1 } }).exec();
 };
 
-exports.createDefaulsGroupsPlayer = function (leaderid, username) {
-    var user = userModule.user.findOne({ username: username }).exec();
+exports.createDefaulsGroupsPlayer = function (leaderid, idusername) {
     var dgroups = local.service.getDefaultGroups();
-    return Promise.all([dgroups, user]).then(([dgroupsR, userR]) => {
+    return Promise.all([dgroups]).then(([dgroupsR]) => {
         dgroupsR.forEach(element => {
             element._id = mongoose.Types.ObjectId();
             element.isNew = true;
             element.idLeaderboard = leaderid;
-            element.idUser = userR._id;
+            element.idUser = idusername;
             element.save();
         });
     });

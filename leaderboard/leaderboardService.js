@@ -1,6 +1,7 @@
 const local = require("./");
 var sha1 = require('sha1');
 var groupsModel = require('groups');
+var userModule = require('users');
 
 Object.filter = (obj, predicate) =>
     Object.keys(obj)
@@ -15,23 +16,6 @@ exports.getPublicLeader = function (leadername) {
     return local.leaderboard.findOne({ name: leadername, password: { $exists: false } }, { password: 0 }, { sort: { name: -1 } }).exec();
 };
 
-exports.agregate = function () {
-    return groupsModel.group.aggregate([
-        {
-            $group: {
-                _id: {
-                    user: '$idUser',
-                    leader: '$idLeaderboard'
-                },
-                matches: { $addToSet: '$matches' }
-            }
-        }], function (err, res) {
-
-
-
-            console.log(res);
-        });
-}
 
 exports.getLoggedLeader = function (leadername, username) {
     var dotQuery = "listaUsers." + username;
@@ -58,14 +42,18 @@ exports.updateColor = function (leadername, username) {
 
 exports.joinLeader = function (leadername, password, username) {
     var dotUpdate = "listaUsers." + username;
-    return local.leaderboard.findOneAndUpdate({ name: leadername, password: password, [dotUpdate]: { $exists: false } }, {
-        $set: { [dotUpdate]: new local.leaderboardPlayer({ username: username, isAdmin: false, isActive: false }) }
-    }, { new: true })
-        .then((leader) => {
-            if (!leader) return Promise.reject({ errors: { name: "La quiniela no existe o no tienes privilegios suficientes" } });
-            groupsModel.service.createDefaulsGroupsPlayer(leader._id, username);
-            return leader;
-        });
+    var user = userModule.user.findOne({ username: username }).exec();
+
+    return Promise.all([user]).then(([userR]) => {
+        return local.leaderboard.findOneAndUpdate({ name: leadername, password: password, [dotUpdate]: { $exists: false } }, {
+            $set: { [dotUpdate]: new local.leaderboardPlayer({ id: user._id, username: username, isAdmin: false, isActive: false }) }
+        }, { new: true })
+            .then((leader) => {
+                if (!leader) return Promise.reject({ errors: { name: "La quiniela no existe o no tienes privilegios suficientes" } });
+                groupsModel.service.createDefaulsGroupsPlayer(leader._id, userR._id);
+                return leader;
+            });
+    });
 }
 
 exports.leaveleader = function (leadername, username) {
@@ -112,17 +100,22 @@ exports.kickplayer = function (leadername, kickusername, username) {
 
 exports.createLeader = function (leaderData, username) {
     leaderData["listaUsers"] = {};
-    leaderData.listaUsers[username] = { username: username, isAdmin: true, isActive: true };
-    if (!leaderData.password) delete leaderData.password;
-    return local.leaderboard.count({ name: leaderData.name })
-        .then((data) => {
-            if (data === 0) return new local.leaderboard(leaderData).save();
-            return Promise.reject({ errors: { name: "La quiniela ya existe" } });
-        })
-        .then((leader) => {
-            groupsModel.service.createDefaulsGroupsPlayer(leader._id, username);
-            return leader;
-        });
+    var user = userModule.user.findOne({ username: username }).exec();
+
+    return Promise.all([user]).then(([userR]) => {
+        leaderData.listaUsers[username] = { username: userR.username, id: userR._id, isAdmin: true, isActive: true };
+        if (!leaderData.password) delete leaderData.password;
+
+        return local.leaderboard.count({ name: leaderData.name })
+            .then((data) => {
+                if (data === 0) return new local.leaderboard(leaderData).save();
+                return Promise.reject({ errors: { name: "La quiniela ya existe" } });
+            })
+            .then((leader) => {
+                groupsModel.service.createDefaulsGroupsPlayer(leader._id, userR._id);
+                return leader;
+            });
+    });
 }
 
 exports.updatePlayerStatus = function (username, leadername, updateData) {

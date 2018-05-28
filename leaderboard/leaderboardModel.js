@@ -29,6 +29,7 @@ exports.LeaderBoard = mongoose.model('LeaderBoard', new Schema({
 
 exports.LeaderBoardPlayer = function (input) {
     this.username = input.username;
+    if (input.id !== undefined) this.id = input.id;
     if (input.isAdmin !== undefined) this.isAdmin = input.isAdmin;
     if (input.isActive !== undefined) this.isActive = input.isActive;
     if (input.points !== undefined) this.points = input.points;

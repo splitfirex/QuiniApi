@@ -13,7 +13,7 @@ var leadModule = require('leaderboard');
 
 var secitury = require('./security').passport;
 var dbconn = require('./dbconn');
-//var fixtures = require('./fixtures');
+var fixtures = require('./fixtures');
 
 var app = express();
 
@@ -25,7 +25,7 @@ app.set('view engine', 'jade');
 // after the code that uses bodyParser and other cool stuff
 var originsWhitelist = [
   'http://localhost:3001',      //this is my front-end url for development
-   'http://www.myproductionurl.com'
+   'http://quini.gallego.ml'
 ];
 var corsOptions = {
   origin: function(origin, callback){

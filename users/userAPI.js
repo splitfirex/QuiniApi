@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
-var passport = require('../security').passport;
-var validateUser = require('../security').validateUser;
+var passport = require('security').passport;
+var validateUser = require('security').validateUser;
 var local = require('./');
 
 

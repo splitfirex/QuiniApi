@@ -11,9 +11,11 @@ var groupModule = require('groups');
 var teamModule = require('teams');
 var leadModule = require('leaderboard');
 
-var secitury = require('./security').passport;
+var secitury = require('security').passport;
 var dbconn = require('./dbconn');
-var fixtures = require('./fixtures');
+if(process.env.reloadfixtures){
+  require('./fixtures');
+}
 
 var app = express();
 
@@ -24,8 +26,9 @@ app.set('view engine', 'jade');
 //app.user(bodyParser.json());
 // after the code that uses bodyParser and other cool stuff
 var originsWhitelist = [
-  'http://localhost:3001',      //this is my front-end url for development
-   'http://quini.gallego.ml'
+  'http://localhost:3000',      //this is my front-end url for development
+   'http://quini.gallego.ml',
+   'http://rest.gallego.ml'
 ];
 var corsOptions = {
   origin: function(origin, callback){
@@ -41,6 +44,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 app.use(require('express-session')({
   secret: 'keyboard cat',

@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var local = require('./');
-var validateUser = require('../security').validateUser;
+var validateUser = require('security').validateUser;
 
 router.get('/', function (req, res, next) {
 

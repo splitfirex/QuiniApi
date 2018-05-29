@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var local = require('./');
 var leadModule = require('leaderboard');
-var validateUser = require('../security').validateUser;
+var validateUser = require('security').validateUser;
 var userModule = require('users');
 
 /* GET users listing. */

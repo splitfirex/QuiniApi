@@ -27,6 +27,7 @@
     "request": "^2.87.0",
     "sha1": "^1.1.1",
     "teams": "file:teams",
-    "users": "file:users"
+    "users": "file:users",
+    "security": "file:security"
   }
 }

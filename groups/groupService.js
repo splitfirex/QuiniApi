@@ -125,7 +125,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: null, [dotUpdateFN]: false, [dotUpdateEE]: true }, { multi: true }).exec();
+                    }, { [dotUpdatePP]: null, [dotUpdateFN]: false }, { multi: true }).exec();
 
                     Promise.all([query1]).then(() => {
                         local.service.updatePoints();
@@ -141,7 +141,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 1, [dotUpdateFN]: true, [dotUpdateEE]: false }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 1, [dotUpdateFN]: true }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(1 puntos)")
                     });
 
@@ -154,7 +154,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 3, [dotUpdateFN]: true, [dotUpdateEE]: false }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 3, [dotUpdateFN]: true }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(3 puntos)")
                     });
 
@@ -169,7 +169,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 6, [dotUpdateFN]: true, [dotUpdateEE]: false }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 6, [dotUpdateFN]: true }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(6 puntos)")
                     });
 
@@ -178,7 +178,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 0, [dotUpdateFN]: true, [dotUpdateEE]: false }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 0, [dotUpdateFN]: true }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(0 puntos)")
                     });
 
@@ -264,24 +264,25 @@ exports.lockEdit = function () {
     var now = new Date();
     var dateOffset = (24 * 60 * 60 * 1000) * 1;
     var tomorrow = now.getTime() + dateOffset;
-
-
-    console.log(tomorrow);
+    console.log("Actualizando matches" + tomorrow);
     return local.group.aggregate([
         {
+            $match: {
+                'idUser': { $exists: false }
+            }
+        }, {
             $group: {
                 _id: {
-                    user: '$idUser',
-                    leader: '$idLeaderboard'
+                    user: "$idUser"
                 },
-                mat: { $addToSet: { $objectToArray: "$matches" } }
+                matches: { $addToSet: { $objectToArray: "$matches" } }
             },
 
         }, {
             $project: {
-                "premat": {
+                "matches": {
                     $reduce: {
-                        input: "$mat",
+                        input: "$matches",
                         initialValue: [],
                         in: { $concatArrays: ["$$value", "$$this.v"] }
                     }
@@ -289,14 +290,14 @@ exports.lockEdit = function () {
             }
         }, {
             $project: {
-                items: {
+                matches: {
                     $filter: {
-                        input: "$premat",
+                        input: "$matches",
                         as: "item",
                         cond: {
                             $and: [
                                 { $lte: ["$$item.date", tomorrow] },
-                                { $lte: ["$$item.editable", true] }
+                                { $eq: ["$$item.editable", true] }
                             ]
                         }
                     }
@@ -305,6 +306,18 @@ exports.lockEdit = function () {
         }
 
     ], function (err, res) {
+        res.forEach((item) => {
+            item.matches.forEach((match) => {
+                var queryDotMatch = "matches." + match.name
+                var queryDotMatchEditable = "matches." + match.name +".editable"
+                local.group.update({
+                    [queryDotMatch]: { $exists: true },
+                    [queryDotMatchEditable]: true
+                }, { [queryDotMatchEditable]: false }, { multi: true }, function (err, res) {
+                    console.log(res.nModified + "(editables)")
+                });
+            });
+        });
         return res;
     });
 

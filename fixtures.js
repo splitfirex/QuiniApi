@@ -7,12 +7,13 @@ const teamModule = require("teams");
 const leadModule = require("leaderboard");
 const fs = require("fs");
 
-var j = schedule.scheduleJob('*/1 * * * *', function () {
-    console.log("Actualizando valores desde disco");
+var j = schedule.scheduleJob(process.env.shcedulerTimer, function () {
+    groupModule.service.lockEdit();
     updateAllMatches();
 });
 
 var updateAllMatches = function () {
+    console.log("Actualizando valores desde disco");
     fs.readFile('data.json', 'utf8', function (err, body) {
         if (err) {
             return console.log(err);

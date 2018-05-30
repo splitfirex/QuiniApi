@@ -7,11 +7,12 @@ const teamModule = require("teams");
 const leadModule = require("leaderboard");
 const fs = require("fs");
 
-var j = schedule.scheduleJob(process.env.shcedulerTimer, function () {
-    groupModule.service.lockEdit();
-    updateAllMatches();
-});
-
+if (process.env.setTimer == "true") {
+    var j = schedule.scheduleJob(process.env.shcedulerTimer, function () {
+        groupModule.service.lockEdit();
+        updateAllMatches();
+    });
+}
 var updateAllMatches = function () {
     console.log("Actualizando valores desde disco");
     fs.readFile('data.json', 'utf8', function (err, body) {
@@ -37,7 +38,7 @@ var updateAllMatches = function () {
                         away_team: parseInt(element.away_team),
                         match: element.name
                     })
-                    .catch((err) =>{console.log(err)});
+                    .catch((err) => { console.log(err) });
             });
         }
         for (item in knockouts) {
@@ -55,7 +56,7 @@ var updateAllMatches = function () {
                         away_team: parseInt(element.away_team),
                         match: element.name
                     })
-                    .catch((err) =>{console.log(err)});
+                    .catch((err) => { console.log(err) });
             });
         }
     });

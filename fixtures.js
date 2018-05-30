@@ -110,6 +110,9 @@ if (process.env.reloadFixtures) {
                 Groups[item].matches.forEach(element => {
                     matches[element.name + ""] = new groupModule.match(element);
                     matches[element.name + ""].groupName = Groups[item].name.replace("Group ", "");
+                    matches[element.name + ""].editable = true;
+                    matches[element.name + ""].forced = false;
+                    matches[element.name + ""].playerPoint = null;
                 });
 
                 groupModule.service.createGroup({ ...Groups[item], matches: matches, shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
@@ -120,6 +123,9 @@ if (process.env.reloadFixtures) {
                 knockouts[item].matches.forEach(element => {
                     matches[element.name + ""] = new groupModule.match(element);
                     matches[element.name + ""].groupName = knockouts[item].name
+                    matches[element.name + ""].editable = true;
+                    matches[element.name + ""].forced = false;
+                    matches[element.name + ""].playerPoint = null;
                 });
 
                 groupModule.service.createGroup({ ...knockouts[item], matches: matches, shortName: knockouts[item].name, type: "knockouts", order: counter });

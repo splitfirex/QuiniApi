@@ -2,7 +2,7 @@ const local = require("./");
 const mongoose = require('mongoose');
 const leadModule = require("leaderboard");
 const userModule = require("users");
-var ObjectId = require('mongoose').Types.ObjectId; 
+var ObjectId = require('mongoose').Types.ObjectId;
 
 exports.createGroup = function (groupData) {
     local.group.find({ idLeaderboard: groupData.idLeaderboard, idUser: groupData.idUser, order: groupData.order }, function (data) {
@@ -39,6 +39,7 @@ exports.updateMatch = function (leadername, username, matchData) {
     var dotUpdateHT = "matches." + matchData.match + ".home_team";
     var dotUpdateAT = "matches." + matchData.match + ".away_team";
     var dotUpdateWI = "matches." + matchData.match + ".winner";
+    var dotUpdatePW = "listaUsers." + username + ".winnerTeam";
     var leader = leadModule.leaderboard.findOne({ name: leadername, [queryDot]: true }).exec();
     var user = userModule.user.findOne({ username: username }).exec();
 
@@ -65,8 +66,14 @@ exports.updateMatch = function (leadername, username, matchData) {
                 [dotUpdateWI]: winner
             }
         }, { new: true })
-            .then((group) =>
-                !group ? Promise.reject({ errors: { name: "La quiniela no existe o no es publica y no perteneces a ella" } }) : group);
+            .then((group) => {
+                if (!group) return Promise.reject({ errors: { name: "La quiniela no existe o no es publica y no perteneces a ella" } });
+                if (group.name == "Final") {
+                    leadModule.leaderboard.findOneAndUpdate({ name: leadername },
+                        { $set: { [dotUpdatePW]: winner } }).exec();
+                }
+                return group;
+            });
     });
 };
 
@@ -118,7 +125,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: null, [dotUpdateFN]: false, [dotUpdateEE]:true }, { multi: true }).exec();
+                    }, { [dotUpdatePP]: null, [dotUpdateFN]: false, [dotUpdateEE]: true }, { multi: true }).exec();
 
                     Promise.all([query1]).then(() => {
                         local.service.updatePoints();
@@ -134,7 +141,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 1, [dotUpdateFN]: true, [dotUpdateEE]:false }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 1, [dotUpdateFN]: true, [dotUpdateEE]: false }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(1 puntos)")
                     });
 
@@ -147,7 +154,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 3, [dotUpdateFN]: true, [dotUpdateEE]:false }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 3, [dotUpdateFN]: true, [dotUpdateEE]: false }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(3 puntos)")
                     });
 
@@ -162,7 +169,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 6, [dotUpdateFN]: true, [dotUpdateEE]:false }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 6, [dotUpdateFN]: true, [dotUpdateEE]: false }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(6 puntos)")
                     });
 
@@ -171,7 +178,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
                         [queryDotMatch]: { $exists: true },
                         idLeaderboard: { $exists: true },
                         idUser: { $exists: true }
-                    }, { [dotUpdatePP]: 0, [dotUpdateFN]: true, [dotUpdateEE]:false  }, { multi: true }, function (err, res) {
+                    }, { [dotUpdatePP]: 0, [dotUpdateFN]: true, [dotUpdateEE]: false }, { multi: true }, function (err, res) {
                         console.log(res.nModified + "(0 puntos)")
                     });
 
@@ -217,17 +224,17 @@ exports.updatePoints = function () {
         res.forEach((item) => {
             userModule.user.findById(item._id.user)
                 .then((user) => {
-                    console.log(user);
-                    var querydot = "listaUsers." + user.username;
-                    var updateDot = "listaUsers." + user.username+".points";
+                    if (user) {
+                        var querydot = "listaUsers." + user.username;
+                        var updateDot = "listaUsers." + user.username + ".points";
 
-                    leadModule.leaderboard.findOneAndUpdate({ _id: new ObjectId(item._id.leader), [querydot]: { $exists: true } }, {
-                        $set: { [updateDot]: item.premat2 }
-                    }, { new: true }).then((lader)=> console.log(lader));
-
+                        leadModule.leaderboard.findOneAndUpdate({ _id: new ObjectId(item._id.leader), [querydot]: { $exists: true } }, {
+                            $set: { [updateDot]: item.premat2 }
+                        }, { new: true }).exec();
+                    }
                 });
         });
-        
+
     });
 }
 
@@ -236,7 +243,7 @@ exports.getDefaultGroups = function () {
     return local.group.find({ idLeaderboard: { $exists: false }, idUser: { $exists: false } }, null, { sort: { order: -1 } }).exec();
 };
 
-exports.createDefaulsGroupsPlayer = function (leaderid, idusername) {
+exports.createDefaulsGroupsPlayer = function (leaderid, idusername, type) {
     var dgroups = local.service.getDefaultGroups();
     return Promise.all([dgroups]).then(([dgroupsR]) => {
         dgroupsR.forEach(element => {
@@ -244,10 +251,64 @@ exports.createDefaulsGroupsPlayer = function (leaderid, idusername) {
             element.isNew = true;
             element.idLeaderboard = leaderid;
             element.idUser = idusername;
+            if (element.type != "group" && type == "P") {
+                Object.keys(element.matches).forEach((key) => element.matches[key].forced = true);
+            }
+
             element.save();
         });
     });
 };
+
+exports.lockEdit = function () {
+    var now = new Date();
+    var dateOffset = (24 * 60 * 60 * 1000) * 1;
+    var tomorrow = now.getTime() + dateOffset;
+
+
+    console.log(tomorrow);
+    return local.group.aggregate([
+        {
+            $group: {
+                _id: {
+                    user: '$idUser',
+                    leader: '$idLeaderboard'
+                },
+                mat: { $addToSet: { $objectToArray: "$matches" } }
+            },
+
+        }, {
+            $project: {
+                "premat": {
+                    $reduce: {
+                        input: "$mat",
+                        initialValue: [],
+                        in: { $concatArrays: ["$$value", "$$this.v"] }
+                    }
+                }
+            }
+        }, {
+            $project: {
+                items: {
+                    $filter: {
+                        input: "$premat",
+                        as: "item",
+                        cond: {
+                            $and: [
+                                { $lte: ["$$item.date", tomorrow] },
+                                { $lte: ["$$item.editable", true] }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+
+    ], function (err, res) {
+        return res;
+    });
+
+}
 
 exports.deleteGroupsPlayer = function (leaderid, username) {
     return userModule.user.findOne({ username: username }).then((user) =>

@@ -15,7 +15,7 @@ if (process.env.setTimer == "true") {
 }
 var updateAllMatches = function () {
     console.log("Actualizando valores desde disco");
-    fs.readFile('data.json', 'utf8', function (err, body) {
+    request('https://raw.githubusercontent.com/lsv/fifa-worldcup-2018/master/data.json', function (err, response, body) {
         if (err) {
             return console.log(err);
         }

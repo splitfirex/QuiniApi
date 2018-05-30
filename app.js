@@ -13,20 +13,16 @@ var leadModule = require('leaderboard');
 
 var secitury = require('security').passport;
 var dbconn = require('./dbconn');
-if(process.env.reloadfixtures){
-  require('./fixtures');
-}
+require('./fixtures');
+
 
 var app = express();
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
 
 //app.user(bodyParser.json());
 // after the code that uses bodyParser and other cool stuff
 var originsWhitelist = [
-  'http://localhost:3000',      //this is my front-end url for development
+  'http://localhost:3000',
+  'http://localhost:3001',      //this is my front-end url for development
    'http://quini.gallego.ml',
    'http://rest.gallego.ml'
 ];
@@ -47,7 +43,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.use(require('express-session')({
-  secret: 'keyboard cat',
+  secret: process.env.sessionsecret,
   resave: true,
   saveUninitialized: true,
   cookie:{_expires : 600000}
@@ -74,7 +70,7 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.send('This is not the page you are looking for...');
 });
 
 module.exports = app;

@@ -27,8 +27,6 @@ exports.getLoggedLeader = function (leadername, username) {
 };
 
 exports.updateColor = function (leadername, username) {
-    console.log(leadername);
-    console.log(username);
     var dotUpdate = "listaUsers." + username;
     return local.leaderboard.findOneAndUpdate({ name: leadername, [dotUpdate]: { $exists: true } }, {
         $set: { bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16) }
@@ -50,7 +48,7 @@ exports.joinLeader = function (leadername, password, username) {
         }, { new: true })
             .then((leader) => {
                 if (!leader) return Promise.reject({ errors: { name: "La quiniela no existe o no tienes privilegios suficientes" } });
-                groupsModel.service.createDefaulsGroupsPlayer(leader._id, userR._id);
+                groupsModel.service.createDefaulsGroupsPlayer(leader._id, userR._id, leader.type);
                 return leader;
             });
     });
@@ -112,7 +110,7 @@ exports.createLeader = function (leaderData, username) {
                 return Promise.reject({ errors: { name: "La quiniela ya existe" } });
             })
             .then((leader) => {
-                groupsModel.service.createDefaulsGroupsPlayer(leader._id, userR._id);
+                groupsModel.service.createDefaulsGroupsPlayer(leader._id, userR._id, leader.type);
                 return leader;
             });
     });

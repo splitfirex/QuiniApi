@@ -18,7 +18,7 @@ exports.getPublicLeader = function (leadername) {
 
 
 exports.getLoggedLeader = function (leadername, username) {
-    var dotQuery = "listaUsers." + username;
+    var dotQuery = "listaUsers." + username+".isActive";
     return local.leaderboard.findOne({ name: leadername, $or: [{ [dotQuery]: true }, { password: { $exists: false } }] }, { password: 0 })
         .then((leader) => {
             if (!leader) return Promise.reject({ errors: { name: "La quiniela no existe o no tienes privilegios suficientes" } });

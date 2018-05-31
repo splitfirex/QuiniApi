@@ -6,8 +6,14 @@ var local = require('./');
 
 
 router.post("/sesion", function (req, res, next) {
-    if (req.user) res.status(200).send({ success: true, user: req.user });
-    res.status(400).send({ success: false });
+    if (req.user) {
+        req.logIn(req.user, function (err) {
+            if (err) return res.status(400).send({ success: false });
+            res.status(200).send({ success: true, user: req.user })
+        });
+    } else {
+        res.status(400).send({ success: false });
+    }
 });
 
 router.post("/login", function (req, res, next) {
@@ -32,11 +38,11 @@ router.post('/register', function (req, res, next) {
         req.body.password && { password: req.body.password }
     );
     local.service.registerUser(data)
-        .then((user) => 
-        req.logIn(user, function (err) {
-            if (err) return next(err);
-            return res.status(200).send({ success: true, message: "Login successful.", user: user });
-        }))
+        .then((user) =>
+            req.logIn(user, function (err) {
+                if (err) return next(err);
+                return res.status(200).send({ success: true, message: "Login successful.", user: user });
+            }))
         .catch((err) => res.status(400).json(err));
 });
 

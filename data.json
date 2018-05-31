@@ -438,7 +438,7 @@
       "iso2": "gb-eng",
       "flag": "https://upload.wikimedia.org/wikipedia/en/thumb/b/be/Flag_of_England.svg/800px-Flag_of_England.png",
       "emoji": "flag-england",
-      "emojiString": "🏴󠁧󠁢󠁥󠁮󠁧󠁿"
+      "emojiString": "🝴󠝧󠝢󠝥󠝮󠝧󠝿"
     },
     {
       "id": 29,
@@ -488,9 +488,9 @@
           "type": "group",
           "home_team": 1,
           "away_team": 2,
-          "home_result": null,
+          "home_result":null,
           "away_result": null,
-          "date": "2018-06-14T18:00:00+03:00",
+          "date": "2018-05-31T10:00:00+03:00",
           "stadium": 1,
           "channels": [4,6],
           "finished": false,

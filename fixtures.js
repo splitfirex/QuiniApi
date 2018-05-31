@@ -7,14 +7,15 @@ const teamModule = require("teams");
 const leadModule = require("leaderboard");
 const fs = require("fs");
 
-var j = schedule.scheduleJob(process.env.shcedulerTimer, function () {
-    groupModule.service.lockEdit();
-    updateAllMatches();
-});
-
+if (process.env.setTimer == "true") {
+    var j = schedule.scheduleJob(process.env.shcedulerTimer, function () {
+        groupModule.service.lockEdit();
+        updateAllMatches();
+    });
+}
 var updateAllMatches = function () {
     console.log("Actualizando valores desde disco");
-    fs.readFile('data.json', 'utf8', function (err, body) {
+    request('https://raw.githubusercontent.com/lsv/fifa-worldcup-2018/master/data.json', function (err, response, body) {
         if (err) {
             return console.log(err);
         }
@@ -37,7 +38,7 @@ var updateAllMatches = function () {
                         away_team: parseInt(element.away_team),
                         match: element.name
                     })
-                    .catch((err) =>{console.log(err)});
+                    .catch((err) => { console.log(err) });
             });
         }
         for (item in knockouts) {
@@ -55,7 +56,7 @@ var updateAllMatches = function () {
                         away_team: parseInt(element.away_team),
                         match: element.name
                     })
-                    .catch((err) =>{console.log(err)});
+                    .catch((err) => { console.log(err) });
             });
         }
     });
@@ -109,6 +110,9 @@ if (process.env.reloadFixtures) {
                 Groups[item].matches.forEach(element => {
                     matches[element.name + ""] = new groupModule.match(element);
                     matches[element.name + ""].groupName = Groups[item].name.replace("Group ", "");
+                    matches[element.name + ""].editable = true;
+                    matches[element.name + ""].forced = false;
+                    matches[element.name + ""].playerPoint = null;
                 });
 
                 groupModule.service.createGroup({ ...Groups[item], matches: matches, shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
@@ -119,6 +123,9 @@ if (process.env.reloadFixtures) {
                 knockouts[item].matches.forEach(element => {
                     matches[element.name + ""] = new groupModule.match(element);
                     matches[element.name + ""].groupName = knockouts[item].name
+                    matches[element.name + ""].editable = true;
+                    matches[element.name + ""].forced = false;
+                    matches[element.name + ""].playerPoint = null;
                 });
 
                 groupModule.service.createGroup({ ...knockouts[item], matches: matches, shortName: knockouts[item].name, type: "knockouts", order: counter });

@@ -73,7 +73,7 @@ if (process.env.reloadMain == "true") {
     var user1 = userModule.service.registerUser({ username: userModule.genericuser, password: userModule.genericpassword });
     Promise.all([user1]).then(() => {
         leadModule.service.createLeader({
-            name: leadModule.genericleader, type: "P", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
+            name: leadModule.genericleader, type: "Por Fases", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
         }, userModule.genericuser)
             .catch((err) => console.log(err));
     }).catch((err) => console.log(err));
@@ -84,7 +84,7 @@ if (process.env.reloadDemo == "true") {
     var user2 = userModule.service.registerUser({ username: "Jugador1", password: "jugador1" });
     Promise.all([user2]).then(() => {
         leadModule.service.createLeader({
-            name: "DEMO", type: "P", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
+            name: "DEMO", type: "Por Fases", bgColor: Math.floor((Math.random() * 256 * 256 * 256)).toString(16)
         }, "Jugador1").then((leader) => {
         }).catch((err) => console.log(err));
     }).catch((err) => console.log(err));

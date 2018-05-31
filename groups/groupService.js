@@ -251,7 +251,7 @@ exports.createDefaulsGroupsPlayer = function (leaderid, idusername, type) {
             element.isNew = true;
             element.idLeaderboard = leaderid;
             element.idUser = idusername;
-            if (element.type != "group" && type == "P") {
+            if (element.type != "group" && type == "Por Fases") {
                 Object.keys(element.matches).forEach((key) => element.matches[key].forced = true);
             }
 

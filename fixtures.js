@@ -10,12 +10,12 @@ const fs = require("fs");
 if (process.env.setTimer == "true") {
     var j = schedule.scheduleJob(process.env.shcedulerTimer, function () {
         groupModule.service.lockEdit();
-        updateAllMatches();
+       // updateAllMatches();
     });
 }
 var updateAllMatches = function () {
-    console.log("Actualizando valores desde disco");
     request('https://raw.githubusercontent.com/lsv/fifa-worldcup-2018/master/data.json', function (err, response, body) {
+        console.log("Actualizando valores desde disco");
         if (err) {
             return console.log(err);
         }
@@ -64,10 +64,10 @@ var updateAllMatches = function () {
 
 
 if (process.env.CLEAN_ALL == "true") {
-    leadModule.leaderboard.collection.drop();
-    teamModule.team.collection.drop();
-    userModule.user.collection.drop();
-    groupModule.group.collection.drop();
+    leadModule.leaderboard.remove({}).exec();
+    teamModule.team.remove({}).exec();
+    userModule.user.remove({}).exec();
+    groupModule.group.remove({}).exec();
 }
 
 if (process.env.reloadMain == "true") {
@@ -91,86 +91,91 @@ if (process.env.reloadDemo == "true") {
     }).catch((err) => console.log(err));
 }
 
-if (process.env.reloadFixtures) {
-    if (process.env.reloadFromWeb == "true") {
-        request('https://raw.githubusercontent.com/lsv/fifa-worldcup-2018/master/data.json', function (error, response, body) {
-            if (error) {
-                return console.log(error);
-            }
-            if (error) return console.log(error);
-            var Teams = JSON.parse(body).teams;
-            var Groups = JSON.parse(body).groups;
-            var knockouts = JSON.parse(body).knockout;
-            var counter = 1;
-            for (item in Teams) {
-                teamModule.service.createTeam(Teams[item]);
-            }
-            for (item in Groups) {
-                var matches = {}
-                Groups[item].matches.forEach(element => {
-                    matches[element.name + ""] = new groupModule.match(element);
-                    matches[element.name + ""].groupName = Groups[item].name.replace("Group ", "");
-                    matches[element.name + ""].editable = true;
-                    matches[element.name + ""].forced = false;
-                    matches[element.name + ""].playerPoint = null;
-                });
+if (process.env.reloadFixtures == "true") {
+    var groupp = groupModule.group.remove({ idUser: { $exists: false }, idLeaderboard: { $exists: false } }).exec();
+    var teamp = teamModule.team.remove({}).exec();
 
-                groupModule.service.createGroup({ ...Groups[item], matches: matches, shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
-                counter = counter + 1;
-            }
-            for (item in knockouts) {
-                var matches = {}
-                knockouts[item].matches.forEach(element => {
-                    matches[element.name + ""] = new groupModule.match(element);
-                    matches[element.name + ""].groupName = knockouts[item].name
-                    matches[element.name + ""].editable = true;
-                    matches[element.name + ""].forced = false;
-                    matches[element.name + ""].playerPoint = null;
-                });
+    Promise.all([groupp, teamp]).then(() => {
+        if (process.env.reloadFromWeb == "true") {
+            request('https://raw.githubusercontent.com/lsv/fifa-worldcup-2018/master/data.json', function (error, response, body) {
+                if (error) {
+                    return console.log(error);
+                }
+                if (error) return console.log(error);
+                var Teams = JSON.parse(body).teams;
+                var Groups = JSON.parse(body).groups;
+                var knockouts = JSON.parse(body).knockout;
+                var counter = 1;
+                for (item in Teams) {
+                    teamModule.service.createTeam(Teams[item]);
+                }
+                for (item in Groups) {
+                    var matches = {}
+                    Groups[item].matches.forEach(element => {
+                        matches[element.name + ""] = new groupModule.match(element);
+                        matches[element.name + ""].groupName = Groups[item].name.replace("Group ", "");
+                        matches[element.name + ""].editable = true;
+                        matches[element.name + ""].forced = false;
+                        matches[element.name + ""].playerPoint = null;
+                    });
 
-                groupModule.service.createGroup({ ...knockouts[item], matches: matches, shortName: knockouts[item].name, type: "knockouts", order: counter });
-                counter = counter + 1;
-            }
-        });
-    } else {
-        fs.readFile('data.json', 'utf8', function (err, body) {
-            if (err) {
-                return console.log(err);
-            }
-            if (err) return console.log(err);
-            var Teams = JSON.parse(body).teams;
-            var Groups = JSON.parse(body).groups;
-            var knockouts = JSON.parse(body).knockout;
-            var counter = 1;
-            for (item in Teams) {
-                teamModule.service.createTeam(Teams[item]);
-            }
-            for (item in Groups) {
-                var matches = {}
-                Groups[item].matches.forEach(element => {
-                    matches[element.name + ""] = new groupModule.match(element);
-                    matches[element.name + ""].groupName = Groups[item].name.replace("Group ", "");
-                    matches[element.name + ""].editable = true;
-                    matches[element.name + ""].forced = false;
-                    matches[element.name + ""].playerPoint = null;
-                });
+                    groupModule.service.createGroup({ ...Groups[item], matches: matches, shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
+                    counter = counter + 1;
+                }
+                for (item in knockouts) {
+                    var matches = {}
+                    knockouts[item].matches.forEach(element => {
+                        matches[element.name + ""] = new groupModule.match(element);
+                        matches[element.name + ""].groupName = knockouts[item].name
+                        matches[element.name + ""].editable = true;
+                        matches[element.name + ""].forced = false;
+                        matches[element.name + ""].playerPoint = null;
+                    });
 
-                groupModule.service.createGroup({ ...Groups[item], matches: matches, shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
-                counter = counter + 1;
-            }
-            for (item in knockouts) {
-                var matches = {}
-                knockouts[item].matches.forEach(element => {
-                    matches[element.name + ""] = new groupModule.match(element);
-                    matches[element.name + ""].groupName = knockouts[item].name
-                    matches[element.name + ""].editable = true;
-                    matches[element.name + ""].forced = false;
-                    matches[element.name + ""].playerPoint = null;
-                });
+                    groupModule.service.createGroup({ ...knockouts[item], matches: matches, shortName: knockouts[item].name, type: "knockouts", order: counter });
+                    counter = counter + 1;
+                }
+            });
+        } else {
+            fs.readFile('data.json', 'utf8', function (err, body) {
+                if (err) {
+                    return console.log(err);
+                }
+                if (err) return console.log(err);
+                var Teams = JSON.parse(body).teams;
+                var Groups = JSON.parse(body).groups;
+                var knockouts = JSON.parse(body).knockout;
+                var counter = 1;
+                for (item in Teams) {
+                    teamModule.service.createTeam(Teams[item]);
+                }
+                for (item in Groups) {
+                    var matches = {}
+                    Groups[item].matches.forEach(element => {
+                        matches[element.name + ""] = new groupModule.match(element);
+                        matches[element.name + ""].groupName = Groups[item].name.replace("Group ", "");
+                        matches[element.name + ""].editable = true;
+                        matches[element.name + ""].forced = false;
+                        matches[element.name + ""].playerPoint = null;
+                    });
 
-                groupModule.service.createGroup({ ...knockouts[item], matches: matches, shortName: knockouts[item].name, type: "knockouts", order: counter });
-                counter = counter + 1;
-            }
-        });
-    }
+                    groupModule.service.createGroup({ ...Groups[item], matches: matches, shortName: Groups[item].name.replace("Group ", ""), type: "groups", order: counter });
+                    counter = counter + 1;
+                }
+                for (item in knockouts) {
+                    var matches = {}
+                    knockouts[item].matches.forEach(element => {
+                        matches[element.name + ""] = new groupModule.match(element);
+                        matches[element.name + ""].groupName = knockouts[item].name
+                        matches[element.name + ""].editable = true;
+                        matches[element.name + ""].forced = false;
+                        matches[element.name + ""].playerPoint = null;
+                    });
+
+                    groupModule.service.createGroup({ ...knockouts[item], matches: matches, shortName: knockouts[item].name, type: "knockouts", order: counter });
+                    counter = counter + 1;
+                }
+            });
+        }
+    });
 }

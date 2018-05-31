@@ -25,7 +25,7 @@ exports.getLoggedMatches = function (leadername, username, loggedusername) {
     var user = userModule.user.findOne({ username: username }).exec();
     return Promise.all([leader, user]).then(([leaderR, userR]) => {
         if (!leaderR || !userR) return Promise.reject({ errors: { name: "La quiniela no existe o no es publica y no perteneces a ella" } });
-        return local.group.find({ idLeaderboard: leaderR._id, idUser: userR._id }, null, { sort: { order: 1 } }).exec();
+        return local.group.find({ idLeaderboard: leaderR._id, idUser: userR._id }, null, { sort: { order: 1 } });
     });
 };
 
@@ -40,6 +40,7 @@ exports.updateMatch = function (leadername, username, matchData) {
     var dotUpdateAT = "matches." + matchData.match + ".away_team";
     var dotUpdateWI = "matches." + matchData.match + ".winner";
     var dotUpdatePW = "listaUsers." + username + ".winnerTeam";
+    var dotUpdateFORCED = "matches." + matchData.match + ".forced";
     var leader = leadModule.leaderboard.findOne({ name: leadername, [queryDot]: true }).exec();
     var user = userModule.user.findOne({ username: username }).exec();
 
@@ -67,6 +68,11 @@ exports.updateMatch = function (leadername, username, matchData) {
             }
         }, { new: true })
             .then((group) => {
+                local.group.findOneAndUpdate({ idLeaderboard: leaderR._id, idUser: userR._id, [queryDotMatch]: { $exists: true }, [dotUpdateFORCED]: false }, {
+                    $set: {
+                        [dotUpdateHT]: matchData.home_team, [dotUpdateAT]: matchData.away_team
+                    }
+                }, { new: true }).exec();
                 if (!group) return Promise.reject({ errors: { name: "La quiniela no existe o no es publica y no perteneces a ella" } });
                 if (group.name == "Final") {
                     leadModule.leaderboard.findOneAndUpdate({ name: leadername },
@@ -91,6 +97,7 @@ exports.updateMatchMain = function (leadername, username, matchData) {
     var dotUpdatePP = "matches." + matchData.match + ".playerPoint";
     var dotUpdateFN = "matches." + matchData.match + ".finished";
     var dotUpdateEE = "matches." + matchData.match + ".editable";
+    var dotUpdateFORCED = "matches." + matchData.match + ".forced";
 
     var leader = leadModule.leaderboard.findOne({ name: leadername, [queryDot]: true }).exec();
     var user = userModule.user.findOne({ username: username }).exec();
@@ -119,6 +126,14 @@ exports.updateMatchMain = function (leadername, username, matchData) {
             }
         }, { new: true })
             .then((group) => {
+
+                local.group.update({ idLeaderboard: { $exists: true }, idUser: { $exists: true }, [queryDotMatch]: { $exists: true }, [dotUpdateFORCED]: true }, {
+                    $set: {
+                        [dotUpdateHT]: matchData.home_team, [dotUpdateAT]: matchData.away_team
+                    }
+                }, { multi: true }, function (err, res) {
+                    console.log(res.nModified + "(Forzados)")
+                });;
 
                 if (isNaN(matchData.home_result) || isNaN(matchData.away_result)) {
                     var query1 = local.group.update({
@@ -309,7 +324,7 @@ exports.lockEdit = function () {
         res.forEach((item) => {
             item.matches.forEach((match) => {
                 var queryDotMatch = "matches." + match.name
-                var queryDotMatchEditable = "matches." + match.name +".editable"
+                var queryDotMatchEditable = "matches." + match.name + ".editable"
                 local.group.update({
                     [queryDotMatch]: { $exists: true },
                     [queryDotMatchEditable]: true
